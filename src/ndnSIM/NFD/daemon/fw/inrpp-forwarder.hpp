@@ -69,11 +69,11 @@ PUBLIC_WITH_TESTS_ELSE_PROTECTED: // pipelines
 
   /** \brief outgoing Interest pipeline
     */
-   VIRTUAL_WITH_TESTS void
-   onOutgoingInterest(const shared_ptr<pit::Entry>& pitEntry, Face& outFace, const Interest& interest);
+  VIRTUAL_WITH_TESTS void
+  onOutgoingInterest(const shared_ptr<pit::Entry>& pitEntry, Face& outFace, const Interest& interest);
 
-   VIRTUAL_WITH_TESTS void
-   onIncomingInterest(Face& inFace, const Interest& interest);
+  VIRTUAL_WITH_TESTS void
+  onIncomingInterest(Face& inFace, const Interest& interest);
 private:
   void
   //onContentStoreHit( Face& outFace,const shared_ptr<pit::Entry>& pitEntry, const Interest& interest, const Data& data);

@@ -264,7 +264,7 @@ InrppForwarder::onContentStoreHit(FaceId id, const Interest& interest, const Dat
 	std::map<FaceId,uint32_t>::iterator it = m_bytes.find(id);
 	if(it != m_bytes.end())
 	{
-		NFD_LOG_DEBUG("Sojourn time "<< (double)it->second*8/outFace->getBps() << " " << (double)m_delayGoal/1000 << " "<<it->second<<" "<<outFace->getBps());
+		//NFD_LOG_DEBUG("Sojourn time "<< (double)it->second*8/outFace->getBps() << " " << (double)m_delayGoal/1000 << " "<<it->second<<" "<<outFace->getBps());
 		if((double)it->second/outFace->getBps()/8>(double)m_delayGoal/1000)
 			data.setTag(make_shared<lp::CongestionMarkTag>(1));
 	    //interest->setTag(make_shared<lp::CongestionMarkTag>(1));
@@ -303,8 +303,8 @@ void
 InrppForwarder::onIncomingInterest(Face& inFace, const Interest& interest)
 {
   // receive Interest
-  NFD_LOG_DEBUG("onIncomingInterest face=" << inFace.getId() <<
-                " interest=" << interest.getName().at(-1).toSequenceNumber() << " Nonce="<< interest.getNonce());
+  NFD_LOG_DEBUG("onIncomingInterest face=" << inFace.getId() << " Nonce="<< interest.getNonce());
+               // " interest=" << interest.getName().at(-1).toSequenceNumber());//
   if(interest.getNonce()==0)NFD_LOG_DEBUG("CLOSED_LOOP RECEIVED");
 
   Forwarder::onIncomingInterest(inFace,interest);
