@@ -230,5 +230,6 @@ Strategy::lookupFib(const pit::Entry& pitEntry) const
   return *fibEntry; // only occurs if no delegation finds a FIB nexthop
 }
 
+
 } // namespace fw
 } // namespace nfd

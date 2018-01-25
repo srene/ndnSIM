@@ -57,8 +57,8 @@ void
 Face::setInrppState(InrppState state)
 {
  // NFD_LOG_FACE_TRACE("setInrppState face=" << getId() << " " << state);
-  if(state==InrppState::CLOSED_LOOP)std::cout << "CLOSED_LOOP face " << getId() << std::endl;
-  else std::cout << "OPEN_LOOP face " << getId() << std::endl;
+  //if(state==InrppState::CLOSED_LOOP)std::cout << "CLOSED_LOOP face " << getId() << std::endl;
+  //else std::cout << "OPEN_LOOP face " << getId() << std::endl;
   m_state = state;
 }
 

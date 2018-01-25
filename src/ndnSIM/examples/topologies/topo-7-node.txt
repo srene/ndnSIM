@@ -1,14 +1,14 @@
 # topo-7-node.txt
-
-#   /------\                        /------\                    /------\
+	0				4			    5
+#   /------\  256                   /------\  257            256/------\
 #   | Src1 |<--+            ------->| Rtr3 |<------         +-->| Dst1 |
 #   \------/    \           |       \------/      |        /    \------/
-#                \          |                     |       /     
-#                 +-->/------\   "bottleneck"  /------\<-+ 258     
+#                \        2 |                     | 3     /     
+#                 +-->/------\ 258"bottleneck" /------\<-+ 258     
 #                     | Rtr1 |<===============>| Rtr2 |         
-#                 +-->\------/           257   \------/<-+  259    
-#                /                                        \
-#   /------\    /                                          \    /------\
+#                 +-->\------/            257  \------/<-+ 259    
+#       1        /                                        \         6
+#   /------\ 256/                                          \ 256/------\
 #   | Src2 |<--+                                            +-->| Dst2 |
 #   \------/                                                    \------/
 
@@ -28,9 +28,9 @@ link
 # srcNode   dstNode     bandwidth   metric  delay   queue
 Src1        Rtr1        10Mbps      1        2ms    20
 Src2        Rtr1        10Mbps      1        2ms    20
-Rtr1        Rtr2        1Mbps      1        2ms    20
-Rtr1        Rtr3        1Mbps      1        2ms    20
-Rtr3        Rtr2        1Mbps      1        2ms    20
+Rtr1        Rtr2        1Mbps       1        2ms    20
+Rtr1        Rtr3        1Mbps       1        2ms    20
+Rtr3        Rtr2        1Mbps       1        2ms    20
 Dst1        Rtr2        10Mbps      1        2ms    20
 Dst2        Rtr2        10Mbps      1        2ms    20
 

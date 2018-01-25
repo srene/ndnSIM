@@ -207,6 +207,9 @@ InrppStackHelper::Install(Ptr<Node> node) const
 
   ndn->getConfig().put("tables.cs_max_packets", (m_maxCsSize == 0) ? 1 : m_maxCsSize);
 
+  //ndn->getConfig().put("tables.strategy_choice./", "/localhost/nfd/strategy/inrpp");
+
+
   // Create and aggregate content store if NFD's contest store has been disabled
   if (m_maxCsSize == 0) {
     ndn->AggregateObject(m_contentStoreFactory.Create<ContentStore>());

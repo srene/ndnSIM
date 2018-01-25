@@ -102,7 +102,7 @@ FibHelper::RemoveNextHop(const ControlParameters& parameters, Ptr<Node> node)
 void
 FibHelper::AddRoute(Ptr<Node> node, const Name& prefix, shared_ptr<Face> face, int32_t metric)
 {
-  NS_LOG_LOGIC("[" << node->GetId() << "]$ route add " << prefix << " via " << face->getLocalUri()
+  NS_LOG_LOGIC("[" << node->GetId() << "]$ route add " << prefix << " via " << face->getLocalUri() << " faceid " << face->getId()
                    << " metric " << metric);
 
   // Get L3Protocol object

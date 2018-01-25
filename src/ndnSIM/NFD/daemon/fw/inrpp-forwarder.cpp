@@ -239,7 +239,7 @@ InrppForwarder::GetPackets(FaceId id)
 	return m_outTable.count(id);
 }
 
-void
+/*void
 InrppForwarder::onOutgoingInterest(const shared_ptr<pit::Entry>& pitEntry, Face& outFace, const Interest& interest)
 {
   NFD_LOG_DEBUG("onOutgoingInterest face=" << outFace.getId() <<
@@ -251,7 +251,7 @@ InrppForwarder::onOutgoingInterest(const shared_ptr<pit::Entry>& pitEntry, Face&
   // send Interest
   outFace.sendInterest(interest);
   ++m_counters.nOutInterests;
-}
+}*/
 
 void
 InrppForwarder::onContentStoreHit(FaceId id, const Interest& interest, const Data& data)
@@ -264,9 +264,11 @@ InrppForwarder::onContentStoreHit(FaceId id, const Interest& interest, const Dat
 	std::map<FaceId,uint32_t>::iterator it = m_bytes.find(id);
 	if(it != m_bytes.end())
 	{
-		//NFD_LOG_DEBUG("Sojourn time "<< (double)it->second*8/outFace->getBps() << " " << (double)m_delayGoal/1000 << " "<<it->second<<" "<<outFace->getBps());
-		if((double)it->second/outFace->getBps()/8>(double)m_delayGoal/1000)
+		NFD_LOG_DEBUG("Sojourn time "<< (double)it->second*8/outFace->getBps() << " " << (double)m_delayGoal/1000 << " "<<it->second<<" "<<outFace->getBps());
+		if((double)it->second*8/outFace->getBps()>(double)m_delayGoal/1000){
+			NFD_LOG_DEBUG("Congestion!!! "<<(double)it->second*8/outFace->getBps()<<" "<<(double)m_delayGoal/1000);
 			data.setTag(make_shared<lp::CongestionMarkTag>(1));
+		}
 	    //interest->setTag(make_shared<lp::CongestionMarkTag>(1));
 		NFD_LOG_DEBUG("Bytes in the queue="<<it->second << " " << id);
 		it->second-= static_cast<uint32_t>(data.getContent().size());

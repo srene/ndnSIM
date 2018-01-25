@@ -102,13 +102,13 @@ main(int argc, char* argv[])
   //ns3::ndn::StackHelper ndnHelper;
   ndnHelper.setCsSize(100);
   ndnHelper.setPolicy("nfd::cs::priority_fifo");
-  ndnHelper.SetDefaultRoutes(true);
+  ndnHelper.SetDefaultRoutes(false);
   ndnHelper.InstallAll();
  // ndnHelper.SetOldContentStore("ns3::ndn::cs::Lru", "MaxSize", "10000");
  // ndnHelper.InstallAll();
 
   // Choosing forwarding strategy
-  ndn::StrategyChoiceHelper::InstallAll("/prefix", "/localhost/nfd/strategy/best-route");
+  ndn::StrategyChoiceHelper::InstallAll("/", "/localhost/nfd/strategy/inrpp");
 
   // Installing global routing interface on all nodes
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;

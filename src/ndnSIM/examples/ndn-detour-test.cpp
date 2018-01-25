@@ -60,7 +60,7 @@ main(int argc, char* argv[])
   ndnHelper.InstallAll();
 
   // Choosing forwarding strategy
-  ndn::StrategyChoiceHelper::InstallAll("/prefix", "/localhost/nfd/strategy/best-route");
+  ndn::StrategyChoiceHelper::InstallAll("/prefix", "/localhost/nfd/strategy/inrpp");
 
   // Installing global routing interface on all nodes
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
