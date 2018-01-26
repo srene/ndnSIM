@@ -43,7 +43,7 @@ class FibManager : public NfdManagerBase
 {
 public:
   FibManager(Fib& fib,
-		     Fib& dfib,
+		    // Fib& dfib,
              const FaceTable& faceTable,
              Dispatcher& dispatcher,
              CommandAuthenticator& authenticator);
@@ -54,10 +54,10 @@ private:
              ControlParameters parameters,
              const ndn::mgmt::CommandContinuation& done);
 
-  void
+ /* void
   addDetourNextHop(const Name& topPrefix, const Interest& interest,
                        ControlParameters parameters,
-                       const ndn::mgmt::CommandContinuation& done);
+                       const ndn::mgmt::CommandContinuation& done);*/
 
   void
   removeNextHop(const Name& topPrefix, const Interest& interest,
@@ -74,7 +74,7 @@ private:
 
 private:
   Fib& m_fib;
-  Fib& m_dfib;
+  //Fib& m_dfib;
   const FaceTable& m_faceTable;
 };
 

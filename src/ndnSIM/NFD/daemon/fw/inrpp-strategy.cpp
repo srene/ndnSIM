@@ -139,7 +139,7 @@ InrppStrategy::afterReceiveInterest(const Face& inFace, const Interest& interest
 	    NFD_LOG_DEBUG("FibEntry "<<pitEntry->getName()<<" "<<inFace.getId()<< " "<<it->getFace().getId()<<" "<<it->getCost());//it->);
 
   }*/
-  const fib::Entry& fibDetourEntry = this->lookupDFib(*pitEntry);
+  //const fib::Entry& fibDetourEntry = this->lookupDFib(*pitEntry);
 
   /*for(auto it=fibDetourEntry.getNextHops().begin();it!=fibDetourEntry.getNextHops().end();it++)
   {
@@ -198,7 +198,7 @@ InrppStrategy::afterReceiveInterest(const Face& inFace, const Interest& interest
   }
 }
 
-const fib::Entry&
+/*const fib::Entry&
 InrppStrategy::lookupFib(const pit::Entry& pitEntry) const
 {
   const Fib& fib = m_forwarder.getFib();
@@ -206,7 +206,7 @@ InrppStrategy::lookupFib(const pit::Entry& pitEntry) const
   for (auto it=fib.begin();it!=fib.end();it++)
   {
 	  for (auto it2 = it->getNextHops().begin();it2!=it->getNextHops().end();it2++)
-		  NFD_LOG_DEBUG("Name entry "<<&fib<<" "<<it->getPrefix() /*<<" "it->getNextHops().);*/<<" "<<it2->getFace().getId() <<"  "<< it2->getCost());
+		  NFD_LOG_DEBUG("Name entry "<<&fib<<" "<<it->getPrefix() <<" "<<it2->getFace().getId() <<"  "<< it2->getCost());
   }
 
   const Interest& interest = pitEntry.getInterest();
@@ -240,7 +240,7 @@ InrppStrategy::lookupFib(const pit::Entry& pitEntry) const
   }
   BOOST_ASSERT(fibEntry != nullptr && fibEntry->getPrefix().size() == 0);
   return *fibEntry; // only occurs if no delegation finds a FIB nexthop
-}
+}*/
 
 void
 InrppStrategy::afterReceiveNack(const Face& inFace, const lp::Nack& nack,
@@ -249,7 +249,7 @@ InrppStrategy::afterReceiveNack(const Face& inFace, const lp::Nack& nack,
   this->processNack(inFace, nack, pitEntry);
 }
 
-const fib::Entry&
+/*const fib::Entry&
 InrppStrategy::lookupDFib(const pit::Entry& pitEntry) const
 {
   NFD_LOG_DEBUG(this);
@@ -258,7 +258,7 @@ InrppStrategy::lookupDFib(const pit::Entry& pitEntry) const
   for (auto it=fib.begin();it!=fib.end();it++)
   {
 	  for (auto it2 = it->getNextHops().begin();it2!=it->getNextHops().end();it2++)
-		  NFD_LOG_DEBUG("Name entry "<<&fib<<" "<<it->getPrefix() /*<<" "it->getNextHops().);*/<<" "<<it2->getFace().getId()<<"  "<< it2->getCost());
+		  NFD_LOG_DEBUG("Name entry "<<&fib<<" "<<it->getPrefix() <<" "<<it2->getFace().getId()<<"  "<< it2->getCost());
   }
   const Interest& interest = pitEntry.getInterest();
   // has forwarding hint?
@@ -291,7 +291,7 @@ InrppStrategy::lookupDFib(const pit::Entry& pitEntry) const
   }
   BOOST_ASSERT(fibEntry != nullptr && fibEntry->getPrefix().size() == 0);
   return *fibEntry; // only occurs if no delegation finds a FIB nexthop
-}
+}*/
 
 } // namespace fw
 } // namespace nfd

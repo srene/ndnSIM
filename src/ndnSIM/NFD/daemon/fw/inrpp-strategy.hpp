@@ -70,8 +70,8 @@ public:
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 
-  const fib::Entry& lookupDFib(const pit::Entry& pitEntry) const;
-  const fib::Entry& lookupFib(const pit::Entry& pitEntry) const;
+  //const fib::Entry& lookupDFib(const pit::Entry& pitEntry) const;
+  //const fib::Entry& lookupFib(const pit::Entry& pitEntry) const;
 
   static const time::milliseconds RETX_SUPPRESSION_INITIAL;
   static const time::milliseconds RETX_SUPPRESSION_MAX;

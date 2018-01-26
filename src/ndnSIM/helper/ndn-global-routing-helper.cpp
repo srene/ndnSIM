@@ -225,8 +225,7 @@ GlobalRoutingHelper::CalculateRoutes()
   BOOST_CONCEPT_ASSERT((boost::VertexListGraphConcept<boost::NdnGlobalRouterGraph>));
   BOOST_CONCEPT_ASSERT((boost::IncidenceGraphConcept<boost::NdnGlobalRouterGraph>));
 
-  // Onur added this:
-  std::map<Ptr<GlobalRouter>, boost::DistancesMap> nodeMap;
+
 
   boost::NdnGlobalRouterGraph graph;
   // typedef graph_traits < NdnGlobalRouterGraph >::vertex_descriptor vertex_descriptor;
@@ -255,7 +254,7 @@ GlobalRoutingHelper::CalculateRoutes()
 
     // NS_LOG_DEBUG (predecessors.size () << ", " << distances.size ());
 
-    nodeMap[source] = distances;
+   // nodeMap[source] = distances;
 
     Ptr<L3Protocol> L3protocol = (*node)->GetObject<L3Protocol>();
     shared_ptr<nfd::Forwarder> forwarder = L3protocol->getForwarder();
@@ -283,62 +282,131 @@ GlobalRoutingHelper::CalculateRoutes()
     }
   }
 
-	//Compute Detour Routes
-	NS_LOG_INFO("Computing Detour routes:");
-	for (NodeList::Iterator node = NodeList::Begin(); node != NodeList::End(); node++) {
-	  Ptr<GlobalRouter> source = (*node)->GetObject<GlobalRouter>();
-	  if (source == 0) {
-		NS_LOG_DEBUG("Node " << (*node)->GetId() << " does not export GlobalRouter interface");
-		continue;
+}
+
+void
+GlobalRoutingHelper::CalculateRoutesWithDetour()
+{
+	 /**
+	   * Implementation of route calculation is heavily based on Boost Graph Library
+	   * See http://www.boost.org/doc/libs/1_49_0/libs/graph/doc/table_of_contents.html for more details
+	   */
+
+	  BOOST_CONCEPT_ASSERT((boost::VertexListGraphConcept<boost::NdnGlobalRouterGraph>));
+	  BOOST_CONCEPT_ASSERT((boost::IncidenceGraphConcept<boost::NdnGlobalRouterGraph>));
+	  // Onur added this:
+	  std::map<Ptr<GlobalRouter>, boost::DistancesMap> nodeMap;
+
+	  boost::NdnGlobalRouterGraph graph;
+	  // typedef graph_traits < NdnGlobalRouterGraph >::vertex_descriptor vertex_descriptor;
+
+	  // For now we doing Dijkstra for every node.  Can be replaced with Bellman-Ford or Floyd-Warshall.
+	  // Other algorithms should be faster, but they need additional EdgeListGraph concept provided by
+	  // the graph, which
+	  // is not obviously how implement in an efficient manner
+	  for (NodeList::Iterator node = NodeList::Begin(); node != NodeList::End(); node++) {
+	    Ptr<GlobalRouter> source = (*node)->GetObject<GlobalRouter>();
+	    if (source == 0) {
+	      NS_LOG_DEBUG("Node " << (*node)->GetId() << " does not export GlobalRouter interface");
+	      continue;
+	    }
+
+	    boost::DistancesMap distances;
+
+	    dijkstra_shortest_paths(graph, source,
+	                            // predecessor_map (boost::ref(predecessors))
+	                            // .
+	                            distance_map(boost::ref(distances))
+	                              .distance_inf(boost::WeightInf)
+	                              .distance_zero(boost::WeightZero)
+	                              .distance_compare(boost::WeightCompare())
+	                              .distance_combine(boost::WeightCombine()));
+
+	    // NS_LOG_DEBUG (predecessors.size () << ", " << distances.size ());
+
+	    nodeMap[source] = distances;
+
+	    Ptr<L3Protocol> L3protocol = (*node)->GetObject<L3Protocol>();
+	    shared_ptr<nfd::Forwarder> forwarder = L3protocol->getForwarder();
+
+	    NS_LOG_DEBUG("Reachability from Node: " << source->GetObject<Node>()->GetId());
+	    for (const auto& dist : distances) {
+	      if (dist.first == source)
+	        continue;
+	      else {
+	        // cout << "  Node " << dist.first->GetObject<Node> ()->GetId ();
+	        if (std::get<0>(dist.second) == 0) {
+	          // cout << " is unreachable" << endl;
+	        }
+	        else {
+	          for (const auto& prefix : dist.first->GetLocalPrefixes()) {
+	            NS_LOG_DEBUG(" prefix " << prefix << " reachable via face " << *std::get<0>(dist.second)
+	                         << " with distance " << std::get<1>(dist.second) << " with delay "
+	                         << std::get<2>(dist.second));
+
+	            FibHelper::AddRoute(*node, *prefix, std::get<0>(dist.second),
+	                                std::get<1>(dist.second));
+	          }
+	        }
+	      }
+	    }
 	  }
-	  boost::DistancesMap src_distances = nodeMap[source];
 
-	  for (const auto& dist : src_distances) {
-		if (dist.first == source)
-		  continue;
-		else {
-		  // cout << "  Node " << dist.first->GetObject<Node> ()->GetId ();
-		  if (std::get<0>(dist.second) == 0) {
-			// cout << " is unreachable" << endl;
-		  }
-		  else {
-			GlobalRouter::IncidencyList edgeList = source->GetIncidencies();
-			//for each destination prefix
-			Ptr<GlobalRouter> destination = dist.first;
-			/* Onur: Identify 1-hop detours of source for each destination node
+	  //Compute Detour Routes
+	  NS_LOG_INFO("Computing Detour routes:");
+	  for (NodeList::Iterator node = NodeList::Begin(); node != NodeList::End(); node++) {
+	    Ptr<GlobalRouter> source = (*node)->GetObject<GlobalRouter>();
+	    if (source == 0) {
+	      NS_LOG_DEBUG("Node " << (*node)->GetId() << " does not export GlobalRouter interface");
+	      continue;
+	    }
+	    boost::DistancesMap src_distances = nodeMap[source];
 
-					  source  ----- next_hop ------ -------- .... ------ destination
-						  \          /
-						   \        /
-							\      /
-							 neighbor
+	    for (const auto& dist : src_distances) {
+	      if (dist.first == source)
+	        continue;
+	      else {
+	        // cout << "  Node " << dist.first->GetObject<Node> ()->GetId ();
+	        if (std::get<0>(dist.second) == 0) {
+	          // cout << " is unreachable" << endl;
+	        }
+	        else {
+	          GlobalRouter::IncidencyList edgeList = source->GetIncidencies();
+	          //for each destination prefix
+	          Ptr<GlobalRouter> destination = dist.first;
+	          /* Onur: Identify 1-hop detours of source for each destination node
 
-			*/
-			std::shared_ptr<nfd::Face> src_face = std::get<0>(dist.second);
-			for (GlobalRouter::IncidencyList::iterator it=edgeList.begin(); it != edgeList.end(); ++it) {
-			  Ptr<GlobalRouter> nghbr = std::get<2>(*it);
-			  shared_ptr<Face> src_nghbr_face = std::get<1>(*it);
-			  if (nghbr == destination)
-				continue;
-			  boost::DistancesMap nghbr_distances = nodeMap[nghbr];
-			  std::tuple<std::shared_ptr<nfd::Face>, uint32_t, double> distance = nghbr_distances[destination];
-			  shared_ptr<nfd::Face> nghbr_face = std::get<0>(distance);
-			  if (nghbr->m_face2gr[nghbr_face] == source->m_face2gr[src_face]){
-				for (const auto& prefix : dist.first->GetLocalPrefixes()) {
-				//for each neighbor of source
-				  FibHelper::AddDetourRoute(*node, *prefix, src_nghbr_face, 1);
-				  NS_LOG_DEBUG("Node: " << source->GetObject<Node>()->GetId()
-							   <<" has a detour neighbor: " <<nghbr->GetObject<Node>()->GetId()
-							   <<" for prefix: " << *prefix);
-				  //TODO is multiple detour routes per prefix possible?
+	                    source  ----- next_hop ------ -------- .... ------ destination
+	                        \          /
+	                         \        /
+	                          \      /
+	                           neighbor
+	          */
+	          std::shared_ptr<nfd::Face> src_face = std::get<0>(dist.second);
+	          for (GlobalRouter::IncidencyList::iterator it=edgeList.begin(); it != edgeList.end(); ++it) {
+	            Ptr<GlobalRouter> nghbr = std::get<2>(*it);
+	            shared_ptr<Face> src_nghbr_face = std::get<1>(*it);
+	            if (nghbr == destination)
+	              continue;
+	            boost::DistancesMap nghbr_distances = nodeMap[nghbr];
+	            std::tuple<std::shared_ptr<nfd::Face>, uint32_t, double> distance = nghbr_distances[destination];
+	            shared_ptr<nfd::Face> nghbr_face = std::get<0>(distance);
+	            if (nghbr->m_face2gr[nghbr_face] == source->m_face2gr[src_face]){
+	              for (const auto& prefix : dist.first->GetLocalPrefixes()) {
+	              //for each neighbor of source
+	                FibHelper::AddDetourRoute(*node, *prefix, src_nghbr_face, std::get<1>(dist.second)+1);
+	                NS_LOG_DEBUG("Node: " << source->GetObject<Node>()->GetId()
+	                             <<" has a detour neighbor: " <<nghbr->GetObject<Node>()->GetId()
+	                             <<" for prefix: " << *prefix);
+	                //TODO is multiple detour routes per prefix possible?
 
-				}
-			  }
-			}
-		  }
-		}
+	              }
+	            }
+	          }
+	        }
+	      }
+	    }
 	  }
-	}
 }
 
 void

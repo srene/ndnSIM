@@ -100,6 +100,9 @@ public:
   static void
   CalculateRoutes();
 
+  static void
+  CalculateRoutesWithDetour();
+
   /**
    * @brief Calculate all possible next-hop independent alternative routes
    *

@@ -206,7 +206,7 @@ L3Protocol::~L3Protocol()
 void
 L3Protocol::initialize()
 {
- // m_impl->m_forwarder = make_shared<nfd::Forwarder>();
+  //m_impl->m_forwarder = make_shared<nfd::Forwarder>();
 
   initializeManagement();
 
@@ -268,8 +268,9 @@ L3Protocol::initializeManagement()
 
   m_impl->m_authenticator = CommandAuthenticator::create();
 
+  //NS_LOG_LOGIC("Fibmanager "<<forwarder->getFib()<<" "<<forwarder->GetDfib());
   m_impl->m_fibManager.reset(new FibManager(forwarder->getFib(),
-		     	 	 	 	 	 	 	 	forwarder->getDfib(),
+		     	 	 	 	 	 	 	 	//forwarder->getDfib(),
                                             forwarder->getFaceTable(),
                                             *m_impl->m_dispatcher,
                                             *m_impl->m_authenticator));

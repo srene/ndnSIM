@@ -180,6 +180,10 @@ StackHelper::Install(Ptr<Node> node) const
 
   Ptr<L3Protocol> ndn = m_ndnFactory.Create<L3Protocol>();
 
+  shared_ptr<nfd::Forwarder> fw =  make_shared<nfd::Forwarder>();
+
+  ndn->setForwarder(fw);
+
   if (m_isRibManagerDisabled) {
     ndn->getConfig().put("ndnSIM.disable_rib_manager", true);
   }

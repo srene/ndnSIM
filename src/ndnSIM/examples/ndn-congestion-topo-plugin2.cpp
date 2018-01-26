@@ -102,13 +102,14 @@ main(int argc, char* argv[])
   //ns3::ndn::StackHelper ndnHelper;
   ndnHelper.setCsSize(100);
   ndnHelper.setPolicy("nfd::cs::priority_fifo");
-  ndnHelper.SetDefaultRoutes(false);
+  ndnHelper.SetDefaultRoutes(true);
   ndnHelper.InstallAll();
  // ndnHelper.SetOldContentStore("ns3::ndn::cs::Lru", "MaxSize", "10000");
  // ndnHelper.InstallAll();
 
   // Choosing forwarding strategy
   ndn::StrategyChoiceHelper::InstallAll("/", "/localhost/nfd/strategy/inrpp");
+  //ndn::StrategyChoiceHelper::InstallAll("/", "/localhost/nfd/strategy/best-route2");
 
   // Installing global routing interface on all nodes
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
@@ -121,9 +122,7 @@ main(int argc, char* argv[])
   Ptr<Node> producer1 = Names::Find<Node>("Dst1");
   Ptr<Node> producer2 = Names::Find<Node>("Dst2");
 
-
   Ptr<Node> router2 = Names::Find<Node>("Rtr2");
-
 
   ndn::AppHelper consumerHelper("ns3::ndn::ConsumerCbr");
   consumerHelper.SetAttribute("Frequency", StringValue("100")); // 10 interests a second
@@ -156,7 +155,7 @@ main(int argc, char* argv[])
   producerHelper.Install(producer2);
 
   // Calculate and install FIBs
-  ndn::GlobalRoutingHelper::CalculateRoutes();
+  ndn::GlobalRoutingHelper::CalculateRoutesWithDetour();
 
   NodeContainer nodes = topologyReader.GetNodes();
   /*for(uint32_t i = 0; i<nodes.GetN(); i++)

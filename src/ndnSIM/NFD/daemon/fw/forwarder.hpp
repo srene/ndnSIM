@@ -148,11 +148,11 @@ public: // forwarding entrypoints and tables
     return m_fib;
   }
 
-  Fib&
+  /*Fib&
   getDfib()
   {
     return m_dfib;
-  }
+  }*/
 
   Pit&
   getPit()
@@ -319,7 +319,7 @@ protected:
 
   NameTree           m_nameTree;
   Fib                m_fib;
-  Fib                m_dfib;
+ // Fib                m_dfib;
   Pit                m_pit;
   Cs                 m_cs;
   Measurements       m_measurements;

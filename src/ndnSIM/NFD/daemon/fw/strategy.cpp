@@ -196,7 +196,11 @@ const fib::Entry&
 Strategy::lookupFib(const pit::Entry& pitEntry) const
 {
   const Fib& fib = m_forwarder.getFib();
-
+  for (auto it=fib.begin();it!=fib.end();it++)
+  {
+	  for (auto it2 = it->getNextHops().begin();it2!=it->getNextHops().end();it2++)
+		  NFD_LOG_DEBUG("Name entry "<<&fib<<" "<<it->getPrefix() /*<<" "it->getNextHops().);*/<<" "<<it2->getFace().getId()<<"  "<< it2->getCost());
+  }
   const Interest& interest = pitEntry.getInterest();
   // has forwarding hint?
   if (interest.getForwardingHint().empty()) {

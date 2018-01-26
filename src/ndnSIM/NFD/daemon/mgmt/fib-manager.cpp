@@ -36,26 +36,26 @@ namespace nfd {
 NFD_LOG_INIT("FibManager");
 
 FibManager::FibManager(Fib& fib,
-        			   Fib& dfib,
+        			 //  Fib& dfib,
                        const FaceTable& faceTable,
                        Dispatcher& dispatcher,
                        CommandAuthenticator& authenticator)
   : NfdManagerBase(dispatcher, authenticator, "fib")
   , m_fib(fib)
-  , m_dfib(dfib)
+ // , m_dfib(dfib)
   , m_faceTable(faceTable)
 {
   registerCommandHandler<ndn::nfd::FibAddNextHopCommand>("add-nexthop",
     bind(&FibManager::addNextHop, this, _2, _3, _4, _5));
   registerCommandHandler<ndn::nfd::FibRemoveNextHopCommand>("remove-nexthop",
     bind(&FibManager::removeNextHop, this, _2, _3, _4, _5));
-  registerCommandHandler<ndn::nfd::FibAddNextHopCommand>("add-detour-nexthop",
-    bind(&FibManager::addDetourNextHop, this, _2, _3, _4, _5));
+  //registerCommandHandler<ndn::nfd::FibAddNextHopCommand>("add-detour-nexthop",
+  //  bind(&FibManager::addDetourNextHop, this, _2, _3, _4, _5));
 
   registerStatusDatasetHandler("list", bind(&FibManager::listEntries, this, _1, _2, _3));
 }
 
-void
+/*void
 FibManager::addDetourNextHop(const Name& topPrefix, const Interest& interest,
                        ControlParameters parameters,
                        const ndn::mgmt::CommandContinuation& done)
@@ -86,7 +86,8 @@ FibManager::addDetourNextHop(const Name& topPrefix, const Interest& interest,
     NFD_LOG_INFO("add-detour-nexthop result: FAIL reason: unknown-faceid: " << faceId);
     return done(ControlResponse(410, "Face not found"));
   }
-}
+}*/
+
 void
 FibManager::addNextHop(const Name& topPrefix, const Interest& interest,
                        ControlParameters parameters,
