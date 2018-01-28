@@ -47,7 +47,7 @@ namespace ndn {
 
 NS_LOG_COMPONENT_DEFINE("ndn.FibHelper");
 
-void
+/*void
 FibHelper::AddDetourHop(const ControlParameters& parameters, Ptr<Node> node)
 {
   NS_LOG_DEBUG("Add Detour Next Hop command was initialized");
@@ -62,7 +62,7 @@ FibHelper::AddDetourHop(const ControlParameters& parameters, Ptr<Node> node)
 
   Ptr<L3Protocol> l3protocol = node->GetObject<L3Protocol>();
   l3protocol->injectInterest(*command);
-}
+}*/
 
 
 void
@@ -207,7 +207,7 @@ FibHelper::RemoveRoute(Ptr<Node> node, const Name& prefix, shared_ptr<Face> face
   RemoveNextHop(parameters, node);
 }
 
-void
+/*void
 FibHelper::AddDetourRoute(Ptr<Node> node, const Name& prefix, shared_ptr<Face> face, int32_t metric)
 {
   NS_LOG_LOGIC("[" << node->GetId() << "]$ route add " << prefix << " via " << face->getLocalUri()
@@ -224,7 +224,7 @@ FibHelper::AddDetourRoute(Ptr<Node> node, const Name& prefix, shared_ptr<Face> f
   parameters.setCost(metric);
 
   AddDetourHop(parameters, node);
-}
+}*/
 
 
 void

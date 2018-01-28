@@ -43,15 +43,6 @@ Entry::findNextHop(const Face& face)
                       });
 }
 
-NextHopList::iterator
-Entry::findDetourHop(const Face& face)
-{
-  return std::find_if(m_nextHops.begin(), m_nextHops.end(),
-                      [&face] (const NextHop& nexthop) {
-                        return &nexthop.getFace() == &face;
-                      });
-}
-
 bool
 Entry::hasNextHop(const Face& face) const
 {

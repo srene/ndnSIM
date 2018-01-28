@@ -394,7 +394,7 @@ GlobalRoutingHelper::CalculateRoutesWithDetour()
 	            if (nghbr->m_face2gr[nghbr_face] == source->m_face2gr[src_face]){
 	              for (const auto& prefix : dist.first->GetLocalPrefixes()) {
 	              //for each neighbor of source
-	                FibHelper::AddDetourRoute(*node, *prefix, src_nghbr_face, std::get<1>(dist.second)+1);
+	                FibHelper::AddRoute(*node, *prefix, src_nghbr_face, std::get<1>(dist.second)+1);
 	                NS_LOG_DEBUG("Node: " << source->GetObject<Node>()->GetId()
 	                             <<" has a detour neighbor: " <<nghbr->GetObject<Node>()->GetId()
 	                             <<" for prefix: " << *prefix);

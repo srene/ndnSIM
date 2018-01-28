@@ -55,7 +55,8 @@ typedef TransportState FaceState;
 
 enum class InrppState{
 	CLOSED_LOOP,
-	OPEN_LOOP
+	OPEN_LOOP,
+	CONGESTED
 };
 /** \brief generalization of a network interface
  *

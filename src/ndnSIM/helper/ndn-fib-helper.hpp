@@ -73,8 +73,8 @@ public:
    * \param face   Face
    * \param metric Routing metric
    */
-  static void
-  AddDetourRoute(Ptr<Node> node, const Name& prefix, shared_ptr<Face> face, int32_t metric);
+  //static void
+  //AddDetourRoute(Ptr<Node> node, const Name& prefix, shared_ptr<Face> face, int32_t metric);
 
   /**
    * \brief Add forwarding entry to FIB
@@ -168,8 +168,8 @@ private:
   static void
   AddNextHop(const ControlParameters& parameters, Ptr<Node> node);
 
-  static void
-  AddDetourHop(const ControlParameters& parameters, Ptr<Node> node);
+  //static void
+  //AddDetourHop(const ControlParameters& parameters, Ptr<Node> node);
 
   static void
   RemoveNextHop(const ControlParameters& parameters, Ptr<Node> node);

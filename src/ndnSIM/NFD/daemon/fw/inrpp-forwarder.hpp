@@ -84,11 +84,16 @@ private:
   onContentStoreMiss(FaceId id, FaceId inFace, const Interest& interest);
 private:
 
+  void notifyUpstream(FaceId id,const Interest& interest);
+
+  bool checkCongestion(const Data& data);
+
   ns3::Ptr<ns3::ndn::ContentStore> m_csFromNdnSim;
   std::multimap<FaceId,nameFace> m_outTable;
   std::map<FaceId,uint32_t> m_bytes;
   std::map<FaceId,double> m_queueTime;
   uint32_t m_delayGoal;
+
 };
 
 } // namespace nfd

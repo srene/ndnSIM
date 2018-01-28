@@ -98,6 +98,47 @@ isNextHopEligible(const Face& inFace, const Interest& interest,
   return true;
 }
 
+
+/** \brief determines whether a NextHop is eligible
+ *  \param inFace incoming face of current Interest
+ *  \param interest incoming Interest
+ *  \param nexthop next hop
+ *  \param pitEntry PIT entry
+ *  \param wantUnused if true, NextHop must not have unexpired out-record
+ *  \param now time::steady_clock::now(), ignored if !wantUnused
+ */
+bool
+InrppStrategy::isDetourNextHop(const Face& inFace, const Interest& interest,
+                  const fib::NextHop& nexthop,
+                  const shared_ptr<pit::Entry>& pitEntry,
+				  Name& fibEntryName)//,
+            //      bool wantUnused = false,
+             //     time::steady_clock::TimePoint now = time::steady_clock::TimePoint::min())
+{
+  const Face& outFace = nexthop.getFace();
+
+
+  // forwarding would violate scope
+  if (wouldViolateScope(inFace, interest, outFace))
+    return false;
+
+  // do not forward back to the same face, unless it is ad hoc
+  if (outFace.getInrppState()==face::InrppState::OPEN_LOOP)
+    return true;
+
+  else {
+	/*    pit::OutRecordCollection::iterator outRecord = pitEntry->getOutRecord(inFace);
+	    for(pit::OutRecordCollection::iterator it = outRecord.begin(); it != outRecord.end();it++)
+	    {
+	    		NFD_LOG_DEBUG("OutRecord "<<it->getLastNonce()<<" "<<it->getLastRenewed());
+	    }
+*/
+	  std::map<Name,uint32_t>::iterator it = m_outface.find(fibEntryName);
+  }
+
+  return true;
+}
+
 /** \brief pick an eligible NextHop with earliest out-record
  *  \note It is assumed that every nexthop has an out-record.
  */
@@ -134,11 +175,11 @@ InrppStrategy::afterReceiveInterest(const Face& inFace, const Interest& interest
 
   const fib::Entry& fibEntry = this->lookupFib(*pitEntry);
 
-  /*for(auto it=fibEntry.getNextHops().begin();it!=fibEntry.getNextHops().end();it++)
+  for(auto it=fibEntry.getNextHops().begin();it!=fibEntry.getNextHops().end();it++)
   {
-	    NFD_LOG_DEBUG("FibEntry "<<pitEntry->getName()<<" "<<inFace.getId()<< " "<<it->getFace().getId()<<" "<<it->getCost());//it->);
+	    NFD_LOG_DEBUG("FibEntry "<<fibEntry.getPrefix()<<" "<<pitEntry->getName()<<" "<<inFace.getId()<< " "<<it->getFace().getId()<<" "<<it->getCost());//it->);
 
-  }*/
+  }
   //const fib::Entry& fibDetourEntry = this->lookupDFib(*pitEntry);
 
   /*for(auto it=fibDetourEntry.getNextHops().begin();it!=fibDetourEntry.getNextHops().end();it++)
@@ -151,9 +192,11 @@ InrppStrategy::afterReceiveInterest(const Face& inFace, const Interest& interest
 
   if (suppression == RetxSuppressionResult::NEW) {
     // forward to nexthop with lowest cost except downstream
+	  NFD_LOG_DEBUG("new interest");
     it = std::find_if(nexthops.begin(), nexthops.end(),
       bind(&isNextHopEligible, cref(inFace), interest, _1, pitEntry,
-           false, time::steady_clock::TimePoint::min()));
+           false, time::steady_clock::TimePoint::min())
+		   );
 
     if (it == nexthops.end()) {
       NFD_LOG_DEBUG(interest << " from=" << inFace.getId() << " noNextHop");
@@ -166,7 +209,16 @@ InrppStrategy::afterReceiveInterest(const Face& inFace, const Interest& interest
       return;
     }
 
+    if(it->getFace().getInrppState()==face::InrppState::CONGESTED	)
+    {
+        NFD_LOG_DEBUG("Detour");
+
+    		std::map<Name,uint32_t>::iterator iter = m_outface.find(fibEntry.getPrefix());
+    		if(iter!=m_outface.end())
+    			if(iter->second==it->getFace().getId())it++;
+    }
     Face& outFace = it->getFace();
+    m_outface.insert(std::pair<Name,uint32_t>(fibEntry.getPrefix(),outFace.getId()));
     this->sendInterest(pitEntry, outFace, interest);
     NFD_LOG_DEBUG(interest << " from=" << inFace.getId()
                            << " newPitEntry-to=" << outFace.getId());

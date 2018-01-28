@@ -99,9 +99,6 @@ private:
   NextHopList::iterator
   findNextHop(const Face& face);
 
-  NextHopList::iterator
-  findDetourHop(const Face& face);
-
   /** \brief sorts the nexthop list
    */
   void

@@ -68,16 +68,26 @@ public:
   afterReceiveNack(const Face& inFace, const lp::Nack& nack,
                    const shared_ptr<pit::Entry>& pitEntry) override;
 
+
+  bool
+  isDetourNextHop(const Face& inFace, const Interest& interest,
+                    const fib::NextHop& nexthop,
+                    const shared_ptr<pit::Entry>& pitEntry,
+  				  Name& fibEntryName);
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 
   //const fib::Entry& lookupDFib(const pit::Entry& pitEntry) const;
   //const fib::Entry& lookupFib(const pit::Entry& pitEntry) const;
+
 
   static const time::milliseconds RETX_SUPPRESSION_INITIAL;
   static const time::milliseconds RETX_SUPPRESSION_MAX;
   RetxSuppressionExponential m_retxSuppression;
 
   friend ProcessNackTraits<InrppStrategy>;
+
+  std::map<Name,uint32_t> m_outface;
+
 };
 
 } // namespace fw

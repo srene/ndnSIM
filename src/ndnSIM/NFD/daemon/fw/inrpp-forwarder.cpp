@@ -110,6 +110,7 @@ InrppForwarder::onIncomingData(Face& inFace, const Data& data)
   data.setTag(make_shared<lp::IncomingFaceIdTag>(inFace.getId()));
   ++m_counters.nInData;
 
+  if(checkCongestion(data)) inFace.setInrppState(face::InrppState::CONGESTED);
   // /localhost scope control
   bool isViolatingLocalhost = inFace.getScope() == ndn::nfd::FACE_SCOPE_NON_LOCAL &&
                               scope_prefix::LOCALHOST.isPrefixOf(data.getName());
@@ -185,13 +186,23 @@ InrppForwarder::onIncomingData(Face& inFace, const Data& data)
   }
 }
 
+bool
+InrppForwarder::checkCongestion(const Data& data)
+{
+    shared_ptr<lp::CongestionMarkTag> congestionMarkTag = data.getTag<lp::CongestionMarkTag>();
+    if (congestionMarkTag != nullptr) {
+    		data.removeTag<lp::CongestionMarkTag>();
+    		NFD_LOG_DEBUG("Congestion received");
+    }
+
+}
 void
 InrppForwarder::sendData(FaceId id)
 {
-    NFD_LOG_DEBUG(this << " SendData face=" << id << " outTable " << m_outTable.size() << " cslimit="<< m_cs.getLimit() << " size="<<m_cs.size());
+    //NFD_LOG_DEBUG(this << " SendData face=" << id << " outTable " << m_outTable.size() << " cslimit="<< m_cs.getLimit() << " size="<<m_cs.size());
 	std::map<FaceId,nameFace>::iterator it = m_outTable.find(id);
 
-	NFD_LOG_DEBUG("outTable size=" << m_outTable.size());
+	//NFD_LOG_DEBUG("outTable size=" << m_outTable.size());
 	if(it!=m_outTable.end())
 	{
 
@@ -292,13 +303,8 @@ InrppForwarder::onContentStoreMiss(FaceId id, FaceId inFace, const Interest& int
 	m_faceTable.get(inFace)->setInrppState(face::InrppState::CLOSED_LOOP);
 
 	sendData(id);
-	//shared_ptr<Interest> inter = make_shared<Interest>(interest);
-	Interest inter = Interest(interest);
-	inter.setNonce(0);
-	const Interest& inter2 = inter;
-	//interest.setNonce(0);
-	m_faceTable.get(id)->sendInterest(inter2);
 
+	notifyUpstream(id,interest);
 }
 
 void
@@ -308,8 +314,20 @@ InrppForwarder::onIncomingInterest(Face& inFace, const Interest& interest)
   NFD_LOG_DEBUG("onIncomingInterest face=" << inFace.getId() << " Nonce="<< interest.getNonce());
                // " interest=" << interest.getName().at(-1).toSequenceNumber());//
   if(interest.getNonce()==0)NFD_LOG_DEBUG("CLOSED_LOOP RECEIVED");
-
-  Forwarder::onIncomingInterest(inFace,interest);
+  else Forwarder::onIncomingInterest(inFace,interest);
 }
+
+void
+InrppForwarder::notifyUpstream(FaceId id,const Interest& interest)
+{
+	//shared_ptr<Interest> inter = make_shared<Interest>(interest);
+	Interest inter = Interest(interest);
+	inter.setNonce(0);
+	const Interest& inter2 = inter;
+	//interest.setNonce(0);
+	m_faceTable.get(id)->sendInterest(inter2);
+
+}
+
 
 } // namespace nfd

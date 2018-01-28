@@ -102,7 +102,7 @@ main(int argc, char* argv[])
   //ns3::ndn::StackHelper ndnHelper;
   ndnHelper.setCsSize(100);
   ndnHelper.setPolicy("nfd::cs::priority_fifo");
-  ndnHelper.SetDefaultRoutes(true);
+  ndnHelper.SetDefaultRoutes(false);
   ndnHelper.InstallAll();
  // ndnHelper.SetOldContentStore("ns3::ndn::cs::Lru", "MaxSize", "10000");
  // ndnHelper.InstallAll();
@@ -125,7 +125,7 @@ main(int argc, char* argv[])
   Ptr<Node> router2 = Names::Find<Node>("Rtr2");
 
   ndn::AppHelper consumerHelper("ns3::ndn::ConsumerCbr");
-  consumerHelper.SetAttribute("Frequency", StringValue("100")); // 10 interests a second
+  consumerHelper.SetAttribute("Frequency", StringValue("50")); // 10 interests a second
   consumerHelper.SetAttribute("LifeTime", StringValue("100s")); // 10 interests a second
   consumerHelper.SetAttribute("RetxTimer", StringValue("100s"));
   consumerHelper.SetAttribute("MaxSeq",StringValue("1000"));
