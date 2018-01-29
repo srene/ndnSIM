@@ -106,11 +106,13 @@ void
 InrppForwarder::onIncomingData(Face& inFace, const Data& data)
 {
   // receive Data
-  NFD_LOG_DEBUG("onIncomingData face=" << inFace.getId() << " data=" << data.getName());
+  NFD_LOG_DEBUG("onIncomingData face=" << inFace.getId() << " data=" << data.getName() << " "<<static_cast<int>(inFace.getInrppState()));
   data.setTag(make_shared<lp::IncomingFaceIdTag>(inFace.getId()));
   ++m_counters.nInData;
 
   if(checkCongestion(data)) inFace.setInrppState(face::InrppState::CONGESTED);
+  NFD_LOG_DEBUG("onIncomingData face=" << inFace.getId() << " data=" << data.getName() << " "<<static_cast<int>(inFace.getInrppState()));
+
   // /localhost scope control
   bool isViolatingLocalhost = inFace.getScope() == ndn::nfd::FACE_SCOPE_NON_LOCAL &&
                               scope_prefix::LOCALHOST.isPrefixOf(data.getName());
@@ -193,8 +195,9 @@ InrppForwarder::checkCongestion(const Data& data)
     if (congestionMarkTag != nullptr) {
     		data.removeTag<lp::CongestionMarkTag>();
     		NFD_LOG_DEBUG("Congestion received");
+    		return true;
     }
-
+    return false;
 }
 void
 InrppForwarder::sendData(FaceId id)

@@ -87,10 +87,34 @@ static void ChangeState(uint32_t val, nfd::face::InrppState state, const Face& f
 
 }
 
+class PcapWriter {
+public:
+  PcapWriter(const std::string& file)
+  {
+    PcapHelper helper;
+    m_pcap = helper.CreateFile(file, std::ios::out, PcapHelper::DLT_PPP);
+  }
+
+  void
+  TracePacket(Ptr<const Packet> packet)
+  {
+    static PppHeader pppHeader;
+    pppHeader.SetProtocol(0x0077);
+
+    m_pcap->Write(Simulator::Now(), pppHeader, packet);
+  }
+
+private:
+  Ptr<PcapFileWrapper> m_pcap;
+};
+
+
 int
 main(int argc, char* argv[])
 {
+  bool inrpp=false;
   CommandLine cmd;
+  cmd.AddValue ("inrpp", "enable inrpp protocol", inrpp);
   cmd.Parse(argc, argv);
 
   AnnotatedTopologyReader topologyReader("", 25);
@@ -98,18 +122,27 @@ main(int argc, char* argv[])
   topologyReader.Read();
 
   // Install NDN stack on all nodes
-  ns3::ndn::InrppStackHelper ndnHelper;
-  //ns3::ndn::StackHelper ndnHelper;
-  ndnHelper.setCsSize(100);
-  ndnHelper.setPolicy("nfd::cs::priority_fifo");
-  ndnHelper.SetDefaultRoutes(false);
-  ndnHelper.InstallAll();
+  if(inrpp){
+	  ns3::ndn::InrppStackHelper ndnHelper;
+	  ndnHelper.setCsSize(1000);
+	  ndnHelper.setPolicy("nfd::cs::priority_fifo");
+	  ndnHelper.SetDefaultRoutes(false);
+	  ndnHelper.InstallAll();
+  }
+  else {
+	  ns3::ndn::StackHelper ndnHelper;
+	  ndnHelper.setCsSize(1000);
+	  ndnHelper.setPolicy("nfd::cs::priority_fifo");
+	  ndnHelper.SetDefaultRoutes(false);
+	  ndnHelper.InstallAll();
+  }
+
  // ndnHelper.SetOldContentStore("ns3::ndn::cs::Lru", "MaxSize", "10000");
  // ndnHelper.InstallAll();
 
   // Choosing forwarding strategy
-  ndn::StrategyChoiceHelper::InstallAll("/", "/localhost/nfd/strategy/inrpp");
-  //ndn::StrategyChoiceHelper::InstallAll("/", "/localhost/nfd/strategy/best-route2");
+  if(inrpp) ndn::StrategyChoiceHelper::InstallAll("/", "/localhost/nfd/strategy/inrpp");
+  else ndn::StrategyChoiceHelper::InstallAll("/", "/localhost/nfd/strategy/best-route2");
 
   // Installing global routing interface on all nodes
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
@@ -125,7 +158,7 @@ main(int argc, char* argv[])
   Ptr<Node> router2 = Names::Find<Node>("Rtr2");
 
   ndn::AppHelper consumerHelper("ns3::ndn::ConsumerCbr");
-  consumerHelper.SetAttribute("Frequency", StringValue("50")); // 10 interests a second
+  consumerHelper.SetAttribute("Frequency", StringValue("100000000")); // 10 interests a second
   consumerHelper.SetAttribute("LifeTime", StringValue("100s")); // 10 interests a second
   consumerHelper.SetAttribute("RetxTimer", StringValue("100s"));
   consumerHelper.SetAttribute("MaxSeq",StringValue("1000"));
@@ -155,7 +188,8 @@ main(int argc, char* argv[])
   producerHelper.Install(producer2);
 
   // Calculate and install FIBs
-  ndn::GlobalRoutingHelper::CalculateRoutesWithDetour();
+  if(inrpp) ndn::GlobalRoutingHelper::CalculateRoutesWithDetour();
+  else ndn::GlobalRoutingHelper::CalculateRoutes();
 
   NodeContainer nodes = topologyReader.GetNodes();
   /*for(uint32_t i = 0; i<nodes.GetN(); i++)
@@ -187,14 +221,19 @@ main(int argc, char* argv[])
 	  //l3->getForwarder()->GetObject<nfd::InrppForwarder>();
   }*/
   // setting default parameters for PointToPoint links and channels
-   std::string folder = "results/";
-   std::string ratesFile = folder + "rates.txt";
-   std::string dropFile = folder + "drop.txt";
-   std::string delayFile = folder + "delay.txt";
+    std::string folder;
+	if(inrpp) folder = "results_inrpp/";
+	else folder = "results/";
+	std::string ratesFile = folder + "rates.txt";
+	std::string dropFile = folder + "drop.txt";
+	std::string delayFile = folder + "delay.txt";
 
-   L2RateTracer::InstallAll(dropFile, Seconds(1));
-   ndn::L3RateTracer::InstallAll(ratesFile, Seconds(1));
-   ndn::AppDelayTracer::InstallAll(delayFile);
+	L2RateTracer::InstallAll(dropFile, Seconds(1));
+	ndn::L3RateTracer::InstallAll(ratesFile, Seconds(1));
+	ndn::AppDelayTracer::InstallAll(delayFile);
+
+  PcapWriter trace("ndn-congestion-topo-plugin2.pcap");
+
 
 
   Simulator::Stop(Seconds(20.0));

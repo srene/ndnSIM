@@ -88,7 +88,7 @@ main(int argc, char* argv[])
   consumerHelper.SetAttribute("Batches", StringValue("1s 1 10s 1"));
   consumerHelper.Install(consumers[0]);
 
-  consumerHelper.SetAttribute("Batches", StringValue("11s 1"));
+  consumerHelper.SetAttribute("Batches", StringValue("11s 100"));
   consumerHelper.Install(consumers[1]);
 
   consumerHelper.SetAttribute("Batches", StringValue("11s 1"));

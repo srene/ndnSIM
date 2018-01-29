@@ -208,17 +208,21 @@ InrppStrategy::afterReceiveInterest(const Face& inFace, const Interest& interest
       this->rejectPendingInterest(pitEntry);
       return;
     }
-
-    if(it->getFace().getInrppState()==face::InrppState::CONGESTED	)
+	 	 NFD_LOG_DEBUG("new interest "<<it->getFace().getId() << " "<< static_cast<int>(it->getFace().getInrppState()));
+ 		std::map<Name,uint32_t>::iterator iter = m_outface.find(fibEntry.getPrefix());
+	if(it->getFace().getInrppState()==face::InrppState::CONGESTED	)
     {
         NFD_LOG_DEBUG("Detour");
-
-    		std::map<Name,uint32_t>::iterator iter = m_outface.find(fibEntry.getPrefix());
-    		if(iter!=m_outface.end())
+    		if(iter!=m_outface.end()){
+    	        NFD_LOG_DEBUG("Detour "<<it->getFace().getId()<<" "<<iter->second);
     			if(iter->second==it->getFace().getId())it++;
+    		}
+	        NFD_LOG_DEBUG("Detour "<<it->getFace().getId()<<" "<<iter->second);
     }
     Face& outFace = it->getFace();
-    m_outface.insert(std::pair<Name,uint32_t>(fibEntry.getPrefix(),outFace.getId()));
+	if(iter!=m_outface.end()) iter->second = it->getFace().getId();
+	else m_outface.insert(std::pair<Name,uint32_t>(fibEntry.getPrefix(),outFace.getId()));
+    NFD_LOG_DEBUG("Detour "<<it->getFace().getId()<<" "<<iter->second);
     this->sendInterest(pitEntry, outFace, interest);
     NFD_LOG_DEBUG(interest << " from=" << inFace.getId()
                            << " newPitEntry-to=" << outFace.getId());
