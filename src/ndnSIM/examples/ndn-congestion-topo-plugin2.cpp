@@ -124,14 +124,14 @@ main(int argc, char* argv[])
   // Install NDN stack on all nodes
   if(inrpp){
 	  ns3::ndn::InrppStackHelper ndnHelper;
-	  ndnHelper.setCsSize(1000);
+	  ndnHelper.setCsSize(100);
 	  ndnHelper.setPolicy("nfd::cs::priority_fifo");
 	  ndnHelper.SetDefaultRoutes(false);
 	  ndnHelper.InstallAll();
   }
   else {
 	  ns3::ndn::StackHelper ndnHelper;
-	  ndnHelper.setCsSize(1000);
+	  ndnHelper.setCsSize(100);
 	  ndnHelper.setPolicy("nfd::cs::priority_fifo");
 	  ndnHelper.SetDefaultRoutes(false);
 	  ndnHelper.InstallAll();
@@ -158,7 +158,7 @@ main(int argc, char* argv[])
   Ptr<Node> router2 = Names::Find<Node>("Rtr2");
 
   ndn::AppHelper consumerHelper("ns3::ndn::ConsumerCbr");
-  consumerHelper.SetAttribute("Frequency", StringValue("100000000")); // 10 interests a second
+  consumerHelper.SetAttribute("Frequency", StringValue("100")); // 10 interests a second
   consumerHelper.SetAttribute("LifeTime", StringValue("100s")); // 10 interests a second
   consumerHelper.SetAttribute("RetxTimer", StringValue("100s"));
   consumerHelper.SetAttribute("MaxSeq",StringValue("1000"));

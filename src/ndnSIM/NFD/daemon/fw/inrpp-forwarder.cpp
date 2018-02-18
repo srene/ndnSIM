@@ -199,6 +199,19 @@ InrppForwarder::checkCongestion(const Data& data)
     }
     return false;
 }
+
+bool
+InrppForwarder::checkBackpressure(const Interest& interest)
+{
+    shared_ptr<lp::CongestionMarkTag> congestionMarkTag = interest.getTag<lp::CongestionMarkTag>();
+    if (congestionMarkTag != nullptr) {
+     	interest.removeTag<lp::CongestionMarkTag>();
+    		NFD_LOG_DEBUG("Backpressure received");
+    		return true;
+    }
+    return false;
+}
+
 void
 InrppForwarder::sendData(FaceId id)
 {
@@ -300,14 +313,17 @@ InrppForwarder::onContentStoreMiss(FaceId id, FaceId inFace, const Interest& int
 {
     NFD_LOG_DEBUG("onContentStoreMiss face=" << id <<" "<< interest.getName().at(-1).toSequenceNumber());
    // m_bytes.
+    if(inFace!=NULL)
+    {
 	std::map<FaceId,uint32_t>::iterator it = m_bytes.find(inFace);
 	if(it!=m_bytes.end())m_bytes.erase(it);
 
-	m_faceTable.get(inFace)->setInrppState(face::InrppState::CLOSED_LOOP);
+	//m_faceTable.get(inFace)->setInrppState(face::InrppState::CLOSED_LOOP);
 
 	sendData(id);
 
 	notifyUpstream(id,interest);
+    }
 }
 
 void
@@ -316,7 +332,14 @@ InrppForwarder::onIncomingInterest(Face& inFace, const Interest& interest)
   // receive Interest
   NFD_LOG_DEBUG("onIncomingInterest face=" << inFace.getId() << " Nonce="<< interest.getNonce());
                // " interest=" << interest.getName().at(-1).toSequenceNumber());//
-  if(interest.getNonce()==0)NFD_LOG_DEBUG("CLOSED_LOOP RECEIVED");
+  if(checkBackpressure(interest)){
+	  NFD_LOG_DEBUG("CLOSED_LOOP RECEIVED");
+	  inFace.setInrppState(face::InrppState::CLOSED_LOOP);
+	  m_cs.find(interest,
+	  		               bind(&InrppForwarder::onContentStoreHit, this,inFace.getId(), _1, _2),
+	  		               bind(&InrppForwarder::onContentStoreMiss, this,inFace.getId(),NULL, _1));
+	  		//m_cs.find(it->second);
+  }
   else Forwarder::onIncomingInterest(inFace,interest);
 }
 
@@ -324,11 +347,13 @@ void
 InrppForwarder::notifyUpstream(FaceId id,const Interest& interest)
 {
 	//shared_ptr<Interest> inter = make_shared<Interest>(interest);
-	Interest inter = Interest(interest);
-	inter.setNonce(0);
-	const Interest& inter2 = inter;
+	//Interest inter = Interest(interest);
+	//inter.setNonce(0);
+	//const Interest& inter2 = inter;
 	//interest.setNonce(0);
-	m_faceTable.get(id)->sendInterest(inter2);
+	interest.setTag(make_shared<lp::BackpressureMarkTag>(1));
+
+	m_faceTable.get(id)->sendInterest(interest);
 
 }
 

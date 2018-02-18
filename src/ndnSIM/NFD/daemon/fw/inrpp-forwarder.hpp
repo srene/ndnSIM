@@ -88,6 +88,8 @@ private:
 
   bool checkCongestion(const Data& data);
 
+  bool checkBackpressure(const Interest& interest);
+
   ns3::Ptr<ns3::ndn::ContentStore> m_csFromNdnSim;
   std::multimap<FaceId,nameFace> m_outTable;
   std::map<FaceId,uint32_t> m_bytes;
