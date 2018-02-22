@@ -203,9 +203,9 @@ InrppForwarder::checkCongestion(const Data& data)
 bool
 InrppForwarder::checkBackpressure(const Interest& interest)
 {
-    shared_ptr<lp::CongestionMarkTag> congestionMarkTag = interest.getTag<lp::CongestionMarkTag>();
-    if (congestionMarkTag != nullptr) {
-     	interest.removeTag<lp::CongestionMarkTag>();
+    shared_ptr<lp::BackpressureMarkTag> backpressureMarkTag = interest.getTag<lp::BackpressureMarkTag>();
+    if (backpressureMarkTag != nullptr) {
+     	interest.removeTag<lp::BackpressureMarkTag>();
     		NFD_LOG_DEBUG("Backpressure received");
     		return true;
     }
