@@ -203,11 +203,12 @@ InrppForwarder::checkCongestion(const Data& data)
 bool
 InrppForwarder::checkBackpressure(const Interest& interest)
 {
-    shared_ptr<lp::CongestionMarkTag> congestionMarkTag = interest.getTag<lp::CongestionMarkTag>();
-    if (congestionMarkTag != nullptr) {
-     	interest.removeTag<lp::CongestionMarkTag>();
-    		NFD_LOG_DEBUG("Backpressure received");
-    		return true;
+	NFD_LOG_DEBUG("checkBackpressure "<<interest.getName().at(-1).toSequenceNumber()<<" "<<interest.getNonce());
+    shared_ptr<lp::BackpressureMarkTag> backpressureMarkTag = interest.getTag<lp::BackpressureMarkTag>();
+    if (backpressureMarkTag != nullptr) {
+    	NFD_LOG_DEBUG("Backpressure received");
+     	interest.removeTag<lp::BackpressureMarkTag>();
+    	return true;
     }
     return false;
 }
@@ -228,7 +229,7 @@ InrppForwarder::sendData(FaceId id)
 	    //const ndn::Interest& interest(name.first);
 		m_outTable.erase(it);
 
-		m_cs.find(ndn::Interest(name.first),
+		m_cs.find(ndn::Interest(name.first).shared_from_this(),
 		               bind(&InrppForwarder::onContentStoreHit, this,id, _1, _2),
 		               bind(&InrppForwarder::onContentStoreMiss, this,id,name.second, _1));
 		//m_cs.find(it->second);
@@ -240,7 +241,7 @@ InrppForwarder::sendData(FaceId id)
 
 	}
 
-	uint64_t bps = m_faceTable.get(id)->getBps();
+	/*uint64_t bps = m_faceTable.get(id)->getBps();
 	std::map<FaceId,uint32_t>::iterator it2 = m_bytes.find(id);
 	if(it2!=m_bytes.end())
 	{
@@ -256,7 +257,7 @@ InrppForwarder::sendData(FaceId id)
 			}
 		}
 
-	}
+	}*/
 
 }
 
@@ -311,18 +312,18 @@ void
 InrppForwarder::onContentStoreMiss(FaceId id, FaceId inFace, const Interest& interest)
 //InrppForwarder::onContentStoreMiss( Face& inFace, const shared_ptr<pit::Entry>& pitEntry,const Interest& interest)
 {
-    NFD_LOG_DEBUG("onContentStoreMiss face=" << id <<" "<< interest.getName().at(-1).toSequenceNumber());
+    NFD_LOG_DEBUG("onContentStoreMiss face=" << id << " "<<inFace <<" "<< interest.getName().at(-1).toSequenceNumber()<<" "<<interest.getNonce());
    // m_bytes.
     if(inFace!=NULL)
     {
-	std::map<FaceId,uint32_t>::iterator it = m_bytes.find(inFace);
-	if(it!=m_bytes.end())m_bytes.erase(it);
+		std::map<FaceId,uint32_t>::iterator it = m_bytes.find(inFace);
+		if(it!=m_bytes.end())m_bytes.erase(it);
 
-	//m_faceTable.get(inFace)->setInrppState(face::InrppState::CLOSED_LOOP);
+		//m_faceTable.get(inFace)->setInrppState(face::InrppState::CLOSED_LOOP);
 
-	sendData(id);
+		sendData(id);
 
-	notifyUpstream(id,interest);
+		notifyUpstream(inFace,interest);
     }
 }
 
@@ -330,7 +331,7 @@ void
 InrppForwarder::onIncomingInterest(Face& inFace, const Interest& interest)
 {
   // receive Interest
-  NFD_LOG_DEBUG("onIncomingInterest face=" << inFace.getId() << " Nonce="<< interest.getNonce());
+  NFD_LOG_DEBUG("onIncomingInterest face=" << inFace.getId() << " Nonce="<< interest.getNonce()<<" "<<interest.getName().at(-1).toSequenceNumber());
                // " interest=" << interest.getName().at(-1).toSequenceNumber());//
   if(checkBackpressure(interest)){
 	  NFD_LOG_DEBUG("CLOSED_LOOP RECEIVED");
@@ -346,13 +347,14 @@ InrppForwarder::onIncomingInterest(Face& inFace, const Interest& interest)
 void
 InrppForwarder::notifyUpstream(FaceId id,const Interest& interest)
 {
+	  NFD_LOG_DEBUG("Notify upstream");
 	//shared_ptr<Interest> inter = make_shared<Interest>(interest);
 	//Interest inter = Interest(interest);
 	//inter.setNonce(0);
 	//const Interest& inter2 = inter;
 	//interest.setNonce(0);
-	interest.setTag(make_shared<lp::BackpressureMarkTag>(1));
-
+	interest.setTag(make_shared<lp::BackpressureMarkTag>(0));
+	//checkBackpressure(interest);
 	m_faceTable.get(id)->sendInterest(interest);
 
 }

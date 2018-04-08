@@ -112,7 +112,7 @@ private:
 int
 main(int argc, char* argv[])
 {
-  bool inrpp=false;
+  bool inrpp=true;
   CommandLine cmd;
   cmd.AddValue ("inrpp", "enable inrpp protocol", inrpp);
   cmd.Parse(argc, argv);
@@ -143,7 +143,7 @@ main(int argc, char* argv[])
   // Choosing forwarding strategy
   if(inrpp) ndn::StrategyChoiceHelper::InstallAll("/", "/localhost/nfd/strategy/inrpp");
   else ndn::StrategyChoiceHelper::InstallAll("/", "/localhost/nfd/strategy/best-route2");
-
+  //ndn::StrategyChoiceHelper::InstallAll("/", "/localhost/nfd/strategy/best-route2");
   // Installing global routing interface on all nodes
   ndn::GlobalRoutingHelper ndnGlobalRoutingHelper;
   ndnGlobalRoutingHelper.InstallAll();
@@ -169,8 +169,8 @@ main(int argc, char* argv[])
 
   // on the second consumer node install a Consumer application
   // that will express interests in /dst2 namespace
-  consumerHelper.SetPrefix("/dst2");
-  consumerHelper.Install(consumer2);
+  //consumerHelper.SetPrefix("/dst2");
+  //consumerHelper.Install(consumer2);
 
   ndn::AppHelper producerHelper("ns3::ndn::Producer");
   producerHelper.SetAttribute("PayloadSize", StringValue("1495"));

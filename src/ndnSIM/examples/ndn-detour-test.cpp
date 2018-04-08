@@ -94,8 +94,8 @@ main(int argc, char* argv[])
 
   // on the second consumer node install a Consumer application
   // that will express interests in /dst2 namespace
-  consumerHelper.SetPrefix("/dst2");
-  consumerHelper.Install(consumer2);
+  //consumerHelper.SetPrefix("/dst2");
+  //consumerHelper.Install(consumer2);
 
   ndn::AppHelper producerHelper("ns3::ndn::Producer");
   producerHelper.SetAttribute("PayloadSize", StringValue("1024"));
