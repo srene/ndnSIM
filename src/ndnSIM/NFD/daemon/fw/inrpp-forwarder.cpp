@@ -206,9 +206,9 @@ InrppForwarder::checkBackpressure(const Interest& interest)
 	NFD_LOG_DEBUG("checkBackpressure "<<interest.getName().at(-1).toSequenceNumber()<<" "<<interest.getNonce());
     shared_ptr<lp::BackpressureMarkTag> backpressureMarkTag = interest.getTag<lp::BackpressureMarkTag>();
     if (backpressureMarkTag != nullptr) {
-    	NFD_LOG_DEBUG("Backpressure received");
      	interest.removeTag<lp::BackpressureMarkTag>();
-    	return true;
+    		NFD_LOG_DEBUG("Backpressure received");
+    		return true;
     }
     return false;
 }
@@ -229,7 +229,7 @@ InrppForwarder::sendData(FaceId id)
 	    //const ndn::Interest& interest(name.first);
 		m_outTable.erase(it);
 
-		m_cs.find(ndn::Interest(name.first).shared_from_this(),
+		m_cs.find(ndn::Interest(name.first),
 		               bind(&InrppForwarder::onContentStoreHit, this,id, _1, _2),
 		               bind(&InrppForwarder::onContentStoreMiss, this,id,name.second, _1));
 		//m_cs.find(it->second);
