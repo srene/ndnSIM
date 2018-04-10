@@ -174,6 +174,7 @@ Consumer::SendPacket()
   if (seq == std::numeric_limits<uint32_t>::max()) {
     if (m_seqMax != std::numeric_limits<uint32_t>::max()) {
       if (m_seq >= m_seqMax) {
+    	NS_LOG_INFO("We are done");
         return; // we are totally done
       }
     }
@@ -194,7 +195,7 @@ Consumer::SendPacket()
   interest->setInterestLifetime(interestLifeTime);
 
   // NS_LOG_INFO ("Requesting Interest: \n" << *interest);
-  NS_LOG_INFO("> Interest for " << seq);
+  NS_LOG_INFO("> Interest for " << seq << " nonce="<<interest->getNonce());
 
   WillSendOutInterest(seq);
 

@@ -69,8 +69,8 @@ PUBLIC_WITH_TESTS_ELSE_PROTECTED: // pipelines
 
   /** \brief outgoing Interest pipeline
     */
-  //VIRTUAL_WITH_TESTS void
-  //onOutgoingInterest(const shared_ptr<pit::Entry>& pitEntry, Face& outFace, const Interest& interest);
+  VIRTUAL_WITH_TESTS void
+  onOutgoingInterest(const shared_ptr<pit::Entry>& pitEntry, Face& outFace, const Interest& interest);
 
   VIRTUAL_WITH_TESTS void
   onIncomingInterest(Face& inFace, const Interest& interest);
@@ -86,9 +86,12 @@ private:
 
   void notifyUpstream(FaceId id,const Interest& interest);
 
-  bool checkCongestion(const Data& data);
+  //template <class T1, class T2>
+  //bool checkTag(const T2& packet);
 
+  bool checkCongestion(const Data& data);
   bool checkBackpressure(const Interest& interest);
+  bool checkAbleToSend(const Interest& interest);
 
   ns3::Ptr<ns3::ndn::ContentStore> m_csFromNdnSim;
   std::multimap<FaceId,nameFace> m_outTable;

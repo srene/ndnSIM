@@ -74,6 +74,16 @@ typedef FieldDecl<field_location_tags::Header,
 BOOST_CONCEPT_ASSERT((Field<CongestionMarkField>));
 
 typedef FieldDecl<field_location_tags::Header,
+                  uint64_t,
+                  tlv::BackpressureMark> BackpressureMarkField;
+BOOST_CONCEPT_ASSERT((Field<BackpressureMarkField>));
+
+typedef FieldDecl<field_location_tags::Header,
+                  uint64_t,
+                  tlv::PacketsToSendMark> PacketsToSendMarkField;
+BOOST_CONCEPT_ASSERT((Field<PacketsToSendMarkField>));
+
+typedef FieldDecl<field_location_tags::Header,
                   Sequence,
                   tlv::Ack,
                   true> AckField;

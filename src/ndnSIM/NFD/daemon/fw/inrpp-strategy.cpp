@@ -208,7 +208,8 @@ InrppStrategy::afterReceiveInterest(const Face& inFace, const Interest& interest
       this->rejectPendingInterest(pitEntry);
       return;
     }
-		 NFD_LOG_DEBUG("new interest "<<it->getFace().getId() << " "<< static_cast<int>(it->getFace().getInrppState()));
+
+    NFD_LOG_DEBUG("new interest "<<it->getFace().getId() << " "<< static_cast<int>(it->getFace().getInrppState()));
 		 /* 	std::map<Name,uint32_t>::iterator iter = m_outface.find(fibEntry.getPrefix());
 	if(it->getFace().getInrppState()==face::InrppState::CONGESTED	)
     {
@@ -219,6 +220,10 @@ InrppStrategy::afterReceiveInterest(const Face& inFace, const Interest& interest
     		}
 	        NFD_LOG_DEBUG("Detour "<<it->getFace().getId()<<" "<<iter->second);
     }*/
+	if(it->getFace().getInrppState()==face::InrppState::CLOSED_LOOP)
+	{
+		NFD_LOG_DEBUG("Activate Backpressure");
+	}
     Face& outFace = it->getFace();
 	//if(iter!=m_outface.end()) iter->second = it->getFace().getId();
 	//else m_outface.insert(std::pair<Name,uint32_t>(fibEntry.getPrefix(),outFace.getId()));

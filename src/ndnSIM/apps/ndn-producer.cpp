@@ -122,7 +122,7 @@ Producer::OnInterest(shared_ptr<const Interest> interest)
 
   data->setSignature(signature);
 
-  NS_LOG_INFO("node(" << GetNode()->GetId() << ") responding with Data: " << data->getName().at(-1).toSequenceNumber());
+  NS_LOG_INFO("node(" << GetNode()->GetId() << ") responding with Data: "<<data->getName()<<" " << data->getName().at(-1).toSequenceNumber());
 
   // to create real wire encoding
   data->wireEncode();
