@@ -28,7 +28,9 @@
 
 #include "forwarder.hpp"
 #include "ns3/ndnSIM/model/cs/ndn-content-store.hpp"
+//#include "time.hpp"
 
+#include "../../../ndn-cxx/src/util/scheduler.hpp"
 
 namespace nfd {
 
@@ -74,6 +76,8 @@ PUBLIC_WITH_TESTS_ELSE_PROTECTED: // pipelines
 
   VIRTUAL_WITH_TESTS void
   onIncomingInterest(Face& inFace, const Interest& interest);
+
+  void Timeout(FaceId inFace);
 private:
   void
   //onContentStoreHit( Face& outFace,const shared_ptr<pit::Entry>& pitEntry, const Interest& interest, const Data& data);
@@ -92,13 +96,16 @@ private:
   bool checkCongestion(const Data& data);
   bool checkBackpressure(const Interest& interest);
   bool checkAbleToSend(const Interest& interest);
+  bool checkDisable(const Interest& interest);
 
   ns3::Ptr<ns3::ndn::ContentStore> m_csFromNdnSim;
   std::multimap<FaceId,nameFace> m_outTable;
   std::map<FaceId,uint32_t> m_bytes;
   std::map<FaceId,double> m_queueTime;
   uint32_t m_delayGoal;
-
+  uint32_t m_allowedPackets;
+  scheduler::EventId timeoutEvent;
+  bool disable;
 };
 
 } // namespace nfd

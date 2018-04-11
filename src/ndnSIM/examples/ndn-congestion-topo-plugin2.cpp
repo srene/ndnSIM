@@ -25,6 +25,7 @@
 #include "ns3/point-to-point-module.h"
 //#include "ns3/ndnSIM/helper/inrpp-strategy-choice-helper.hpp"
 #include "ns3/ndnSIM/helper/inrpp-stack-helper.hpp"
+#include "ns3/ndnSIM/model/ndn-l3-protocol.hpp"
 //#include "ns3/ndnSIM/model/inrpp-l3-protocol.hpp"
 #include "ns3/ndnSIM/NFD/daemon/fw/inrpp-forwarder.hpp"
 #include "ns3/ndnSIM/NFD/daemon/face/inrpp-link-service.hpp"
@@ -153,6 +154,7 @@ main(int argc, char* argv[])
   Ptr<Node> consumer2 = Names::Find<Node>("Src2");
 
   Ptr<Node> producer1 = Names::Find<Node>("Dst1");
+  //Ptr<L3Protocol> ndn = producer1->GetObject<L3Protocol>(); //->getConfig().put("tables.cs_max_packets",1000);
   Ptr<Node> producer2 = Names::Find<Node>("Dst2");
 
   Ptr<Node> router2 = Names::Find<Node>("Rtr2");

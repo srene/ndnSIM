@@ -40,6 +40,8 @@ InrppForwarder::InrppForwarder() : Forwarder()
 {
 	NFD_LOG_DEBUG(this);
 	m_delayGoal = 50;
+	m_allowedPackets = 0;
+	disable = false;
 }
 
 InrppForwarder::~InrppForwarder() = default;
@@ -76,7 +78,8 @@ InrppForwarder::onOutgoingData(const Data& data, Face& inFace, Face& outFace)
 		 	                  " data=" << data.getName());
 		  outFace.sendData(data);
 		  ++m_counters.nOutData;
-	  } else if(outFace.getInrppState()!=face::InrppState::CLOSED_LOOP) {
+	 // } else if(outFace.getInrppState()!=face::InrppState::CLOSED_LOOP) {
+	  } else {
 		  //auto interest = make_shared<ndn::Interest>(data.getName());
 		//  NFD_LOG_DEBUG("Prefix outgoingdata face=" << outFace.getId() <<
 		 //	                  " data=" << data.getName() << " size=" <<   data.getContent().size());
@@ -96,8 +99,8 @@ InrppForwarder::onOutgoingData(const Data& data, Face& inFace, Face& outFace)
 		  //dataCopyWithoutTag->removeTag<lp::HopCountTag>();
 		  //NFD_LOG_DEBUG("NFD CACHE");
 		  //m_cs.insert(*dataCopyWithoutTag);
-
-	  } else if(outFace.getInrppState()==face::InrppState::CLOSED_LOOP) {
+	  }
+	 /* } else if(outFace.getInrppState()==face::InrppState::CLOSED_LOOP) {
 		  m_outTable.insert(std::pair<FaceId,nameFace>(outFace.getId(),nameFace(data.getName(),inFace.getId())));
 
 		  std::map<FaceId,uint32_t>::iterator it = m_bytes.find(outFace.getId());
@@ -110,7 +113,7 @@ InrppForwarder::onOutgoingData(const Data& data, Face& inFace, Face& outFace)
 			  m_bytes.insert(std::pair<FaceId,uint32_t>(outFace.getId(),static_cast<uint32_t>(data.getContent().size())));
 
 		  }
-	  }
+	  }*/
 	  //outFace.sendData(data);
 	  //++m_counters.nOutData;
 }
@@ -233,22 +236,35 @@ bool
 InrppForwarder::checkAbleToSend(const Interest& interest)
 {
 	//NFD_LOG_DEBUG("checkAbleToSend "<<interest.getName().at(-1).toSequenceNumber()<<" "<<interest.getNonce());
-    shared_ptr<lp::PacketsToSendMarkTag> packetsToSendMarkTag = interest.getTag<lp::PacketsToSendMarkTag>();
+    shared_ptr<lp::CongestionMarkTag> packetsToSendMarkTag = interest.getTag<lp::CongestionMarkTag>();
     if (packetsToSendMarkTag != nullptr&&packetsToSendMarkTag->get()!=0) {
-     	interest.removeTag<lp::PacketsToSendMarkTag>();
-    	NFD_LOG_DEBUG("Abletosend received "<<packetsToSendMarkTag);
+     	interest.removeTag<lp::CongestionMarkTag>();
+    	NFD_LOG_DEBUG("Abletosend received "<<packetsToSendMarkTag->get());
+    	m_allowedPackets = packetsToSendMarkTag->get();
     	return true;
     }
     return false;
 }
 
 bool
+InrppForwarder::checkDisable(const Interest& interest)
+{
+	//NFD_LOG_DEBUG("checkAbleToSend "<<interest.getName().at(-1).toSequenceNumber()<<" "<<interest.getNonce());
+    shared_ptr<lp::CongestionMarkTag> packetsToSendMarkTag = interest.getTag<lp::CongestionMarkTag>();
+    if (packetsToSendMarkTag != nullptr&&packetsToSendMarkTag->get()==3500) {
+     	interest.removeTag<lp::CongestionMarkTag>();
+    	NFD_LOG_DEBUG("checkDisable received "<<packetsToSendMarkTag->get());
+    	return true;
+    }
+    return false;
+}
+bool
 InrppForwarder::checkBackpressure(const Interest& interest)
 {
 	//NFD_LOG_DEBUG("checkBackpressure "<<interest.getName().at(-1).toSequenceNumber()<<" "<<interest.getNonce());
-    shared_ptr<lp::BackpressureMarkTag> backpressureMarkTag = interest.getTag<lp::BackpressureMarkTag>();
-    if (backpressureMarkTag != nullptr) {
-     	interest.removeTag<lp::BackpressureMarkTag>();
+    shared_ptr<lp::CongestionMarkTag> backpressureMarkTag = interest.getTag<lp::CongestionMarkTag>();
+    if (backpressureMarkTag != nullptr && backpressureMarkTag->get()==0) {
+     	interest.removeTag<lp::CongestionMarkTag>();
     	NFD_LOG_DEBUG("Backpressure received");
     	return true;
     }
@@ -258,11 +274,14 @@ InrppForwarder::checkBackpressure(const Interest& interest)
 void
 InrppForwarder::sendData(FaceId id)
 {
-    //NFD_LOG_DEBUG(this << " SendData face=" << id << " outTable " << m_outTable.size() << " cslimit="<< m_cs.getLimit() << " size="<<m_cs.size());
+    NFD_LOG_DEBUG(this << " SendData face=" << id << " outTable " << m_outTable.size() << " cslimit="<< m_cs.getLimit() << " size="<<m_cs.size()<<" "<<m_allowedPackets<<" "<<(int)m_faceTable.get(id)->getInrppState());
 	std::map<FaceId,nameFace>::iterator it = m_outTable.find(id);
 
 	//NFD_LOG_DEBUG("outTable size=" << m_outTable.size());
-	if(it!=m_outTable.end())
+	if((it!=m_outTable.end()&&
+			((m_faceTable.get(id)->getInrppState()!=face::InrppState::CLOSED_LOOP)||
+					((m_faceTable.get(id)->getInrppState()==face::InrppState::CLOSED_LOOP)&&(m_allowedPackets>10)))))
+	//if((it!=m_outTable.end())&&(m_faceTable.get(id)->getInrppState()!=face::InrppState::CLOSED_LOOP))
 	{
 
 		nameFace name = it->second;
@@ -271,7 +290,13 @@ InrppForwarder::sendData(FaceId id)
 	    //const ndn::Interest& interest(name.first);
 		m_outTable.erase(it);
 
-		m_cs.find(ndn::Interest(name.first),
+		// shared_ptr<Interest> interest = make_shared<Interest> ();
+		shared_ptr<Interest> interest = make_shared<Interest>();
+		//interest->setNonce(m_rand->GetValue(1, std::numeric_limits<uint32_t>::max()));
+		interest->setName(name.first);
+
+		m_cs.find(*interest,
+		//m_cs.find(ndn::Interest(name.first),
 		               bind(&InrppForwarder::onContentStoreHit, this,id, _1, _2),
 		               bind(&InrppForwarder::onContentStoreMiss, this,id,name.second, _1));
 		//m_cs.find(it->second);
@@ -314,13 +339,16 @@ InrppForwarder::onOutgoingInterest(const shared_ptr<pit::Entry>& pitEntry, Face&
   pitEntry->insertOrUpdateOutRecord(outFace, interest);
 
   // send Interest
-  /*if(outFace.getInrppState()==face::InrppState::CLOSED_LOOP&&m_outTable.size()<m_cs.size())
+  if(disable){
+	  interest.setTag(make_shared<lp::CongestionMarkTag>(3500));
+	  disable = false;
+  } else if(outFace.getInrppState()==face::InrppState::CLOSED_LOOP&&m_outTable.size()<m_cs.size())
   {
-	  NFD_LOG_DEBUG("onOutgoingInterest Abletosend mark");
-	  interest.setTag(make_shared<lp::PacketsToSendMarkTag>(m_cs.size()-m_outTable.size()));
+	  NFD_LOG_DEBUG("onOutgoingInterest Abletosend mark "<<m_cs.size()-m_outTable.size());
+	  interest.setTag(make_shared<lp::CongestionMarkTag>(m_cs.size()-m_outTable.size()));
 
 	  //checkAbleToSend(interest);
-  }*/
+  }
   outFace.sendInterest(interest);
   ++m_counters.nOutInterests;
 }
@@ -337,7 +365,7 @@ InrppForwarder::onContentStoreHit(FaceId id, const Interest& interest, const Dat
 	if(it != m_bytes.end())
 	{
 		//NFD_LOG_DEBUG("Sojourn time "<< (double)it->second*8/outFace->getBps() << " " << (double)m_delayGoal/1000 << " "<<it->second<<" "<<outFace->getBps());
-		if((double)it->second*8/outFace->getBps()>(double)m_delayGoal/1000){
+		if((outFace->getInrppState()==face::InrppState::OPEN_LOOP)&&((double)it->second*8/outFace->getBps()>(double)m_delayGoal/1000)){
 			NFD_LOG_DEBUG("Congestion!!! "<<(double)it->second*8/outFace->getBps()<<" "<<(double)m_delayGoal/1000);
 			data.setTag(make_shared<lp::CongestionMarkTag>(1));
 			outFace->setInrppState(face::InrppState::CONGESTED);
@@ -368,16 +396,29 @@ InrppForwarder::onContentStoreMiss(FaceId id, FaceId inFace, const Interest& int
 		notifyUpstream(inFace,interest);
 		sendData(id);
     }
+    scheduler::cancel(timeoutEvent);
+
+    timeoutEvent = scheduler::schedule(time::seconds(1), bind(&InrppForwarder::Timeout, this,inFace));
+    //m_toEvent = Simulator::Schedule (Seconds(1), &InrppForwarder::Timeout, this,inFace);
+
+}
+
+void
+InrppForwarder::Timeout(FaceId inFace)
+{
+	NFD_LOG_DEBUG("Timeout "<<inFace);
+	m_faceTable.get(inFace)->setInrppState(face::InrppState::OPEN_LOOP);
+	m_faceTable.get(inFace)->sendInterest(ndn::Interest("/disable"));
+	//disable=true;
 }
 
 void
 InrppForwarder::onIncomingInterest(Face& inFace, const Interest& interest)
 {
   // receive Interest
-	NFD_LOG_DEBUG("onIncomingInterest face=" << inFace.getId() << " Nonce="<< interest.getNonce());
+	NFD_LOG_DEBUG("onIncomingInterest face=" << inFace.getId() << " Nonce="<< interest.getNonce() << " "<<interest.getName());
   //NFD_LOG_DEBUG("onIncomingInterest face=" << inFace.getId() << " Nonce="<< interest.getNonce()<<" "<<interest.getName().at(-1).toSequenceNumber());
                // " interest=" << interest.getName().at(-1).toSequenceNumber());//
-	checkAbleToSend(interest);
 
   if(checkBackpressure(interest)){
 	  NFD_LOG_DEBUG("Face ="<<inFace.getId()<<" set state CLOSED_LOOP");
@@ -387,22 +428,34 @@ InrppForwarder::onIncomingInterest(Face& inFace, const Interest& interest)
 	  //		               bind(&InrppForwarder::onContentStoreMiss, this,inFace.getId(),NULL, _1));
 	  		//m_cs.find(it->second);
   }
-  Forwarder::onIncomingInterest(inFace,interest);
+  if(checkDisable(interest)){
+	  NFD_LOG_DEBUG("Face ="<<inFace.getId()<<" set state OPEN_LOOP");
+	  inFace.setInrppState(face::InrppState::OPEN_LOOP);
+  }
+  if(inFace.getInrppState()==face::InrppState::CLOSED_LOOP)
+	  checkAbleToSend(interest);
+  if(interest.getName()==Name("/disable")){
+	  NFD_LOG_DEBUG("Face ="<<inFace.getId()<<" set state OPEN_LOOP");
+	  inFace.setInrppState(face::InrppState::OPEN_LOOP);
+  } else Forwarder::onIncomingInterest(inFace,interest);
 }
 
 void
 InrppForwarder::notifyUpstream(FaceId id,const Interest& interest)
 {
-	 NFD_LOG_DEBUG("Notify upstream");
+	 NFD_LOG_DEBUG("Notify upstream "<<(int)m_faceTable.get(id)->getInrppState());
 	//shared_ptr<Interest> inter = make_shared<Interest>(interest);
 	//Interest inter = Interest(interest);
 	//inter.setNonce(0);
 	//const Interest& inter2 = inter;
 	//interest.setNonce(0);
-	NFD_LOG_DEBUG("Face ="<<id<<" set state CLOSED_LOOP");
-	interest.setTag(make_shared<lp::BackpressureMarkTag>(0));
-	//checkBackpressure(interest);
-	m_faceTable.get(id)->setInrppState(face::InrppState::CLOSED_LOOP);
+	if(m_faceTable.get(id)->getInrppState()!=face::InrppState::CLOSED_LOOP){
+		NFD_LOG_DEBUG("Face ="<<id<<" set state CLOSED_LOOP");
+		interest.setTag(make_shared<lp::CongestionMarkTag>(0));
+		//checkBackpressure(interest);
+		m_faceTable.get(id)->setInrppState(face::InrppState::CLOSED_LOOP);
+	}
+	 NFD_LOG_DEBUG("Notify upstream "<<(int)m_faceTable.get(id)->getInrppState());
 	m_faceTable.get(id)->sendInterest(interest);
 
 }
