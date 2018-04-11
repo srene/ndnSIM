@@ -232,11 +232,11 @@ bool InrppForwarder::checkCongestion(const Data& data)
 bool
 InrppForwarder::checkAbleToSend(const Interest& interest)
 {
-	NFD_LOG_DEBUG("checkAbleToSend "<<interest.getName().at(-1).toSequenceNumber()<<" "<<interest.getNonce());
-    shared_ptr<lp::PacketsToSend> backpressureMarkTag = interest.getTag<lp::PacketsToSend>();
-    if (backpressureMarkTag != nullptr&&backpressureMarkTag->get()!=0) {
-     	interest.removeTag<lp::PacketsToSend>();
-    	NFD_LOG_DEBUG("Abletosend received "<<backpressureMarkTag);
+	//NFD_LOG_DEBUG("checkAbleToSend "<<interest.getName().at(-1).toSequenceNumber()<<" "<<interest.getNonce());
+    shared_ptr<lp::PacketsToSendMarkTag> packetsToSendMarkTag = interest.getTag<lp::PacketsToSendMarkTag>();
+    if (packetsToSendMarkTag != nullptr&&packetsToSendMarkTag->get()!=0) {
+     	interest.removeTag<lp::PacketsToSendMarkTag>();
+    	NFD_LOG_DEBUG("Abletosend received "<<packetsToSendMarkTag);
     	return true;
     }
     return false;
@@ -314,13 +314,13 @@ InrppForwarder::onOutgoingInterest(const shared_ptr<pit::Entry>& pitEntry, Face&
   pitEntry->insertOrUpdateOutRecord(outFace, interest);
 
   // send Interest
-  if(outFace.getInrppState()==face::InrppState::CLOSED_LOOP&&m_outTable.size()<m_cs.size())
+  /*if(outFace.getInrppState()==face::InrppState::CLOSED_LOOP&&m_outTable.size()<m_cs.size())
   {
 	  NFD_LOG_DEBUG("onOutgoingInterest Abletosend mark");
-	  interest.setTag(make_shared<lp::AbletoSendMarkTag>(m_cs.size()-m_outTable.size()));
+	  interest.setTag(make_shared<lp::PacketsToSendMarkTag>(m_cs.size()-m_outTable.size()));
 
 	  //checkAbleToSend(interest);
-  }
+  }*/
   outFace.sendInterest(interest);
   ++m_counters.nOutInterests;
 }
@@ -399,8 +399,9 @@ InrppForwarder::notifyUpstream(FaceId id,const Interest& interest)
 	//inter.setNonce(0);
 	//const Interest& inter2 = inter;
 	//interest.setNonce(0);
-	  NFD_LOG_DEBUG("Face ="<<id<<" set state CLOSED_LOOP");
-	interest.setTag(make_shared<lp::CongestionMarkTag>(0));
+	NFD_LOG_DEBUG("Face ="<<id<<" set state CLOSED_LOOP");
+	interest.setTag(make_shared<lp::BackpressureMarkTag>(0));
+	//checkBackpressure(interest);
 	m_faceTable.get(id)->setInrppState(face::InrppState::CLOSED_LOOP);
 	m_faceTable.get(id)->sendInterest(interest);
 

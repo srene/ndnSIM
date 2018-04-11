@@ -99,8 +99,8 @@ public: // consumer
     lp::Packet lpPacket;
     addFieldFromTag<lp::NextHopFaceIdField, lp::NextHopFaceIdTag>(lpPacket, interest2);
     addFieldFromTag<lp::CongestionMarkField, lp::CongestionMarkTag>(lpPacket, interest2);
-    addFieldFromTag<lp::BackpressureMarkField, lp::BackpressureMarkField>(lpPacket, interest2);
-    addFieldFromTag<lp::PacketsToSendMarkField, lp::PacketsToSendMarkField>(lpPacket, interest2);
+    addFieldFromTag<lp::BackpressureMarkField, lp::BackpressureMarkTag>(lpPacket, interest2);
+    addFieldFromTag<lp::PacketsToSendMarkField, lp::PacketsToSendMarkTag>(lpPacket, interest2);
 
     entry.recordForwarding();
     m_face.m_transport->send(finishEncoding(std::move(lpPacket), interest2.wireEncode(),

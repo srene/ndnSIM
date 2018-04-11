@@ -129,6 +129,16 @@ GenericLinkService::encodeLpFields(const ndn::TagHost& netPkt, lp::Packet& lpPac
     lpPacket.add<lp::CongestionMarkField>(*congestionMarkTag);
   }
 
+  shared_ptr<lp::BackpressureMarkTag> backpressureMarkTag = netPkt.getTag<lp::BackpressureMarkTag>();
+  if (backpressureMarkTag != nullptr) {
+    lpPacket.add<lp::BackpressureMarkField>(*backpressureMarkTag);
+  }
+
+  shared_ptr<lp::PacketsToSendMarkTag> packetsToSendMarkTag = netPkt.getTag<lp::PacketsToSendMarkTag>();
+  if (packetsToSendMarkTag != nullptr) {
+    lpPacket.add<lp::PacketsToSendMarkField>(*packetsToSendMarkTag);
+  }
+
   shared_ptr<lp::HopCountTag> hopCountTag = netPkt.getTag<lp::HopCountTag>();
   if (hopCountTag != nullptr) {
     lpPacket.add<lp::HopCountTagField>(*hopCountTag);

@@ -56,7 +56,6 @@ typedef SimpleTag<CachePolicy, 12> CachePolicyTag;
  */
 typedef SimpleTag<uint64_t, 13> CongestionMarkTag;
 
-
 typedef SimpleTag<uint64_t, 14> BackpressureMarkTag;
 
 typedef SimpleTag<uint64_t, 15> PacketsToSendMarkTag;
