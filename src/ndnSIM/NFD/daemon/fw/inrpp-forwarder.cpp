@@ -333,7 +333,7 @@ InrppForwarder::GetPackets(FaceId id)
 void
 InrppForwarder::onOutgoingInterest(const shared_ptr<pit::Entry>& pitEntry, Face& outFace, const Interest& interest)
 {
-  NFD_LOG_DEBUG("onOutgoingInterest face=" << outFace.getId() << " interest=" << pitEntry->getName() << " "<<m_outTable.size());
+  NFD_LOG_DEBUG("onOutgoingInterest face=" << outFace.getId() << " interest=" << pitEntry->getName() <<" "<< interest.getName().at(-1).toSequenceNumber()<< " "<<m_outTable.size());
 
   // insert out-record
   pitEntry->insertOrUpdateOutRecord(outFace, interest);

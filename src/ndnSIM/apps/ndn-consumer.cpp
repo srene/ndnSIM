@@ -195,9 +195,11 @@ Consumer::SendPacket()
   interest->setInterestLifetime(interestLifeTime);
 
   // NS_LOG_INFO ("Requesting Interest: \n" << *interest);
-  NS_LOG_INFO("> Interest for " << seq << " nonce="<<interest->getNonce());
+  NS_LOG_INFO("> Interest for " << seq << " nonce="<<interest->getNonce() << " size="<<interest->wireEncode().size());
 
   WillSendOutInterest(seq);
+
+
 
   m_transmittedInterests(interest, this, m_face);
   m_appLink->onReceiveInterest(*interest);

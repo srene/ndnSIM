@@ -30,7 +30,7 @@
 #include "ns3/ndnSIM/model/cs/ndn-content-store.hpp"
 //#include "time.hpp"
 
-#include "../../../ndn-cxx/src/util/scheduler.hpp"
+//#include "../../../ndn-cxx/src/util/scheduler.hpp"
 
 namespace nfd {
 

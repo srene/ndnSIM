@@ -159,8 +159,8 @@ main(int argc, char* argv[])
 
   Ptr<Node> router2 = Names::Find<Node>("Rtr2");
 
-  ndn::AppHelper consumerHelper("ns3::ndn::ConsumerCbr");
-  consumerHelper.SetAttribute("Frequency", StringValue("100")); // 10 interests a second
+  ndn::AppHelper consumerHelper("ns3::ndn::ConsumerInrpp");
+  consumerHelper.SetAttribute("Frequency", StringValue("45000")); // 10 interests a second
   consumerHelper.SetAttribute("LifeTime", StringValue("100s")); // 10 interests a second
   consumerHelper.SetAttribute("RetxTimer", StringValue("100s"));
   consumerHelper.SetAttribute("MaxSeq",StringValue("1000"));
